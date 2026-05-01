@@ -25,15 +25,17 @@ app.get("/items", (req, res) => {
 
 app.post("/items", (req, res) => {
   const name = String(req.body?.name || "").trim();
-  const quantityRaw = req.body?.quantity;
-  const quantity = Number(quantityRaw ?? 1);
+  const quantity = Number(req.body?.quantity);
 
   if (!name) return res.status(400).json({ error: "name is required" });
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return res.status(400).json({ error: "quantity must be a number > 0" });
+  }
 
   const item = {
     id: nextId++,
     name,
-    quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1,
+    quantity,
     bought: false,
     createdAt: new Date().toISOString(),
     boughtAt: null
