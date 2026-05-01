@@ -9,35 +9,19 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate secrets
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          SERVICE_ID: ${{ secrets.SERVICE_ID }}
-        run: |
-          set -e
-
-          if [ -z "$RENDER_API_KEY" ]; then
-            echo "RENDER_API_KEY is empty"
-            exit 1
-          fi
-
-          if [ -z "$SERVICE_ID" ]; then
-            echo "SERVICE_ID is empty"
-            exit 1
-          fi
-
-          echo "$SERVICE_ID" | grep -Eq '^srv-[A-Za-z0-9]+$' || (echo "SERVICE_ID must look like srv-xxxxxxxx" && exit 1)
-
       - name: Trigger Render deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          SERVICE_ID: ${{ secrets.SERVICE_ID }}
+          SERVICE_ID_RAW: ${{ secrets.SERVICE_ID }}
         run: |
           set -e
+
+          SERVICE_ID="$(printf "%s" "$SERVICE_ID_RAW" | tr -d '\r\n ' )"
           URL="https://api.render.com/v1/services/${SERVICE_ID}/deploys"
+
           curl -f -sS -X POST \
             -H "Accept: application/json" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            "${URL}" \
+            "$URL" \
             -d '{}'
